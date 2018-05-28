@@ -27,6 +27,10 @@ test-suite specs-test
 
 * run specs with `stack build --test`
 
+## Continuous testing with guard-shell
+
+* 
+
 
 ## Reference
 

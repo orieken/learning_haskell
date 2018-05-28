@@ -1,0 +1,60 @@
+notification :terminal_notifier if `uname` =~ /Darwin/
+
+
+notification :tmux,
+  display_message: true,
+  timeout: 5, # in seconds
+  default_message_format: '%s >> %s',
+  # the first %s will show the title, the second the message
+  # Alternately you can also configure *success_message_format*,
+  # *pending_message_format*, *failed_message_format*
+  line_separator: ' > ', # since we are single line we need a separator
+  color_location: 'status-left-bg', # to customize which tmux element will change color
+
+  # Other options:
+  default_message_color: 'black',
+  success: 'colour150',
+  failure: 'colour174',
+  pending: 'colour179',
+
+  # Notify on all tmux clients
+  display_on_all_clients: false
+
+
+# Runs the command and prints a notification
+def execute(cmd)
+  if system(cmd)
+    n 'Build succeeded', 'hspec', :success
+  else
+    n 'Build failed', 'hspec', :failed
+  end
+end
+
+def run_all_tests
+  execute %{
+    stack build --test
+}
+end
+
+=begin
+def run_tests(mod)
+  specfile = "test/#{mod}Spec.hs"
+
+  if File.exists?(specfile)
+    files = [specfile]
+  else
+    files = Dir['test/**/*.hs']
+  end
+
+  execute "ghc -isrc -itest -e main #{files.join(' ')}"
+end
+=end
+
+guard :shell do
+  watch(%r{.*\.cabal$})          { run_all_tests }
+  #watch(%r{test/SpecHelper.hs$}) { run_all_tests }
+  watch(%r{src/(.+)\.hs$}) { run_all_tests }
+  watch(%r{test/(.+)\.hs$}) { run_all_tests }
+  #watch(%r{src/(.+)\.hs$})       { |m| run_tests(m[1]) }
+  #watch(%r{test/(.+)Spec\.hs$})  { |m| run_tests(m[1]) }
+end
